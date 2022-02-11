@@ -1,7 +1,7 @@
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 #include <geometry_msgs/PoseStamped.h>
-#include <sstream>
+#include <nav_msgs/Odometry.h>
 
 #include <iostream>
 #include <iomanip>
@@ -12,16 +12,17 @@
 
 using namespace std;
 
+string fname = "/home/rcbot/Chironix_Interview_Material/test2/catkin_ws/src/my_nodes/csv_files/goals.csv";
 
-std::string fname="/home/rcbot/Chironix_Interview_Material/test2/catkin_ws/src/my_nodes/csv_files/goals.csv";
+//ifstream ip (fname);
 
 vector<vector<string>> read_goal_from_csv()
 {
-  std::vector<vector<string>> content;
+  std::vector<vector<string>> coordinates;
   std::vector<string> row;
-  std::string line, word;
+  std::string line, coordinate;
 
-  fstream file(fname, ios::in);
+  ifstream file(fname, ios::in);
   if (file.is_open())
   {
     while (getline(file, line))
@@ -30,18 +31,25 @@ vector<vector<string>> read_goal_from_csv()
 
       std::stringstream str(line);
 
-      while (getline(str, word, ','))
-       row.push_back(word);
+      while (getline(str, coordinate, ','))
+      {
+        row.push_back(coordinate);
+      }
 
-      content.push_back(row);
+      coordinates.push_back(row);
     }
   }
   else
-    cout << "Could not open the file\n";
+    cout << "----------- Could not open the file--------------------\n";
 
-    return content;
+  return coordinates;
 }
 
+void RobotCurrentPositionCallBack(const nav_msgs::Odometry::ConstPtr &msg){
+
+   //std::cout<<" x: "<< msg->pose.pose.position.x <<" y :"<<msg.pose.pose.position.y<<std::endl;
+   ROS_INFO("robot position is x : %f  , y : %f", msg->pose.pose.position.x,msg->pose.pose.position.x);
+}
 
 int main(int argc, char **argv)
 {
@@ -50,29 +58,38 @@ int main(int argc, char **argv)
 
   ros::NodeHandle n;
   ros::Publisher pub = n.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1000);
+  ros::Subscriber sub = n.subscribe("/odometry/filtered", 1000, RobotCurrentPositionCallBack);
 
   //ros::Duration(5).sleep();
-  std::vector<std::vector<string>>goals=read_goal_from_csv();
+ // vector<vector<string>> goals = read_goal_from_csv();
 
-  for(std::vector<string> goal:goals){
-     geometry_msgs::PoseStamped msg;
+  //for(vector<string> goal:goals){
+
+ ros::Rate loop_rate(100);
+  while (ros::ok())
+  {
+    geometry_msgs::PoseStamped msg;
     msg.header.frame_id = "map";
     msg.header.stamp = ros::Time::now();
-   
-   // msg.pose.position.x = goal[0];
-    //msg.pose.position.y = goal[1];
-    //msg.pose.orientation.w = 1;
+    
 
-    std::cout<<" x:"<<goal[0]<<" y:"<<goal[1]<<" "<<std::endl;
+    msg.pose.position.x = 2;
+    msg.pose.position.y = 3;
+    msg.pose.orientation.w = 1;
 
-    //pub.publish(msg);
+    vector<string> goal;
+     goal[0]="2";
+     goal[1]="3";
 
+    cout << " x:" << goal[0] << " y:" << goal[1] << " " << endl;
+    ROS_INFO("coordinates from the csv file is x : %s, y : %s", goal[0].c_str(), goal[1].c_str());
+
+    pub.publish(msg);
+    ros::spinOnce();
+    loop_rate.sleep();
   }
- 
 
- 
+  //}
 
   return 0;
 }
-
-
