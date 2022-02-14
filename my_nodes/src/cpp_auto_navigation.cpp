@@ -57,8 +57,8 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "cpp_auto_navigation");
 
   ros::NodeHandle n;
-  ros::Publisher pub = n.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1000);
-  ros::Subscriber sub = n.subscribe("/odometry/filtered", 1000, RobotCurrentPositionCallBack);
+  ros::Publisher pub = n.advertise<geometry_msgs::PoseStamped>("move_base/goal", 1000);
+  ros::Subscriber sub = n.subscribe("move_base/status", 1000, RobotCurrentPositionCallBack);
 
   //ros::Duration(5).sleep();
  // vector<vector<string>> goals = read_goal_from_csv();
@@ -77,16 +77,16 @@ int main(int argc, char **argv)
     msg.pose.position.y = 3;
     msg.pose.orientation.w = 1;
 
-    vector<string> goal;
-     goal[0]="2";
-     goal[1]="3";
+    vector<string> goal{"2","3"};
 
-    cout << " x:" << goal[0] << " y:" << goal[1] << " " << endl;
     ROS_INFO("coordinates from the csv file is x : %s, y : %s", goal[0].c_str(), goal[1].c_str());
+    ros::Duration(5).sleep();
 
     pub.publish(msg);
-    ros::spinOnce();
-    loop_rate.sleep();
+    ///ros::spinOnce();
+    ros::Duration(5).sleep();
+    //loop_rate.sleep();
+    //<!--include file="$(find husky_viz)/launch/view_robot.launch" --/>
   }
 
   //}
